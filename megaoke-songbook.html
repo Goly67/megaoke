@@ -1,0 +1,1514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Megaoke Songbook — JSON Uploader</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0a0d12;
+    --bg-panel: #10151d;
+    --bg-row: #12181f;
+    --bg-row-alt: #0d1218;
+    --line: #202a35;
+    --amber: #ffb020;
+    --amber-dim: #7a5a1a;
+    --text: #e8ecf1;
+    --text-dim: #7d8896;
+    --opm: #ff3d7f;
+    --intl: #35c6ff;
+    --ph: #57e389;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse 900px 500px at 50% -10%, rgba(255,176,32,0.08), transparent 60%),
+      repeating-linear-gradient(rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 3px),
+      var(--bg);
+    color:var(--text);
+    font-family:'Space Grotesk',system-ui,sans-serif;
+    min-height:100vh;
+  }
+
+  /* ---------- HEADER / DISPLAY ---------- */
+  header{
+    padding:36px 20px 24px;
+    text-align:center;
+    border-bottom:1px solid var(--line);
+    position:relative;
+  }
+  .brand-eyebrow{
+    font-family:'Orbitron',monospace;
+    font-size:11px;
+    letter-spacing:0.35em;
+    color:var(--amber-dim);
+    text-transform:uppercase;
+    margin-bottom:10px;
+  }
+  .display-panel{
+    display:inline-block;
+    background:linear-gradient(180deg,#0d1117,#070a0e);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:18px 34px;
+    box-shadow: inset 0 0 30px rgba(0,0,0,0.6), 0 0 40px rgba(255,176,32,0.05);
+  }
+  h1{
+    font-family:'Orbitron',monospace;
+    font-weight:900;
+    font-size:clamp(28px,5vw,46px);
+    margin:0;
+    letter-spacing:0.04em;
+    color:var(--amber);
+    text-shadow:0 0 18px rgba(255,176,32,0.55), 0 0 2px rgba(255,176,32,0.9);
+  }
+  .sub{
+    margin-top:8px;
+    font-size:13px;
+    color:var(--text-dim);
+    letter-spacing:0.02em;
+  }
+  .sub strong{color:var(--text);}
+  .updated-stamp{
+    margin-top:12px;
+    font-size:12px;
+    color:var(--amber-dim);
+    font-family:'Orbitron',monospace;
+    letter-spacing:0.08em;
+  }
+
+  /* ---------- UPLOAD PANEL ---------- */
+  .upload-section{
+    max-width:900px;
+    margin:24px auto;
+    padding:24px 20px;
+    background:var(--bg-panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+  }
+  .upload-section h2{
+    margin:0 0 16px;
+    font-family:'Orbitron',monospace;
+    font-size:14px;
+    font-weight:700;
+    letter-spacing:0.08em;
+    color:var(--amber);
+    text-transform:uppercase;
+  }
+  .upload-row{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  #jsonInput{
+    width:100%;
+    height:120px;
+    background:var(--bg-row);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:12px;
+    font-size:13px;
+    font-family:'Courier New',monospace;
+    color:var(--text);
+    outline:none;
+    transition:border-color .15s;
+    resize:vertical;
+  }
+  #jsonInput:focus{
+    border-color:var(--amber-dim);
+    box-shadow:0 0 0 3px rgba(255,176,32,0.08);
+  }
+  #jsonInput::placeholder{color:#4b5563;}
+  
+  .button-group{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .btn{
+    padding:12px 24px;
+    border:none;
+    border-radius:8px;
+    font-family:'Orbitron',monospace;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:0.06em;
+    cursor:pointer;
+    transition:all .15s;
+    text-transform:uppercase;
+  }
+  .btn.primary{
+    background:var(--amber);
+    color:#0a0d12;
+  }
+  .btn.primary:hover{
+    box-shadow:0 0 20px rgba(255,176,32,0.3);
+  }
+  .btn.secondary{
+    background:var(--bg-row);
+    color:var(--text);
+    border:1px solid var(--line);
+  }
+  .btn.secondary:hover{
+    background:#161d26;
+    border-color:#3a4756;
+  }
+  .btn:disabled{
+    opacity:0.5;
+    cursor:not-allowed;
+  }
+
+  .upload-status{
+    font-size:13px;
+    padding:12px;
+    border-radius:6px;
+    display:none;
+  }
+  .upload-status.success{
+    display:block;
+    background:rgba(87,227,137,0.1);
+    color:var(--ph);
+    border:1px solid rgba(87,227,137,0.3);
+  }
+  .upload-status.error{
+    display:block;
+    background:rgba(255,61,127,0.1);
+    color:var(--opm);
+    border:1px solid rgba(255,61,127,0.3);
+  }
+
+  /* ---------- CONTROLS ---------- */
+  .sticky-controls{
+    position:sticky;
+    top:0;
+    z-index:15;
+    background:var(--bg-page);
+    border-bottom:1px solid var(--line);
+    transition:border-color .15s, box-shadow .15s;
+  }
+  .sticky-controls.stuck{
+    border-bottom-color:var(--line);
+    box-shadow:0 4px 12px -4px rgba(0,0,0,0.3);
+    background:rgba(10,13,18,0.96);
+    -webkit-backdrop-filter:blur(8px);
+    backdrop-filter:blur(8px);
+  }
+  .controls{
+    max-width:100%;
+    margin:0;
+    padding:12px 10px;
+  }
+  .search-wrap{
+    position:sticky;
+    top:0;
+    z-index:20;
+    background:var(--bg-page);
+    padding:12px 0 8px 0;
+    display:flex;
+    gap:8px;
+  }
+  #searchInput{
+    flex:1;
+    padding:10px 12px;
+    background:var(--bg-panel);
+    border:2px solid var(--line);
+    border-radius:6px;
+    color:var(--text-main);
+    font-family:inherit;
+    font-size:12px;
+    transition:all 0.2s;
+  }
+  #searchInput{
+    width:100%;
+    background:var(--bg-panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:16px 52px 16px 18px;
+    font-size:17px;
+    font-family:'Space Grotesk',sans-serif;
+    color:var(--text);
+    outline:none;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  #searchInput::placeholder{color:#4b5563;}
+  #searchInput:focus{
+    border-color:var(--amber-dim);
+    box-shadow:0 0 0 3px rgba(255,176,32,0.08);
+  }
+  .search-icon{
+    position:absolute;
+    right:18px;
+    top:50%;
+    transform:translateY(-50%);
+    color:var(--text-dim);
+    font-family:'Orbitron',monospace;
+    font-size:12px;
+    letter-spacing:0.1em;
+    pointer-events:none;
+  }
+
+  .filter-row{
+    display:flex;
+    gap:8px;
+    margin-top:14px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+  .chip{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:13px;
+    font-weight:600;
+    padding:8px 15px;
+    border-radius:20px;
+    border:1px solid var(--line);
+    background:var(--bg-panel);
+    color:var(--text-dim);
+    cursor:pointer;
+    user-select:none;
+    transition:all .12s;
+    white-space:nowrap;
+  }
+  .chip:hover{border-color:#3a4756; color:var(--text);}
+  .chip.active{
+    color:#0a0d12;
+    border-color:transparent;
+    font-weight:700;
+  }
+  .chip[data-lang="All"].active{background:var(--amber);}
+  .chip[data-lang="OPM"].active{background:var(--opm); color:#160108;}
+  .chip[data-lang="International"].active{background:var(--intl); color:#04141c;}
+  .chip[data-lang="PHILIPPINES"].active{background:var(--ph); color:#04170c;}
+
+  .sort-select{
+    margin-left:auto;
+    background:var(--bg-panel);
+    border:1px solid var(--line);
+    color:var(--text-dim);
+    font-family:'Space Grotesk',sans-serif;
+    font-size:13px;
+    padding:8px 12px;
+    border-radius:8px;
+    cursor:pointer;
+  }
+
+  .alpha-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:4px;
+    margin-top:14px;
+  }
+  .alpha-btn{
+    font-family:'Orbitron',monospace;
+    font-size:11px;
+    width:26px;
+    height:26px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:5px;
+    border:1px solid var(--line);
+    background:var(--bg-panel);
+    color:var(--text-dim);
+    cursor:pointer;
+  }
+  .alpha-btn:hover{color:var(--text);border-color:#3a4756;}
+  .alpha-btn.active{background:var(--amber);color:#0a0d12;border-color:var(--amber);}
+
+  /* ---------- RESULTS ---------- */
+  .results-wrap{
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+    padding:16px 12px;
+    background:var(--bg-page);
+    width:100%;
+  }
+  .results-meta{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    font-size:12px;
+    color:var(--text-dim);
+    padding:0 4px 10px;
+    letter-spacing:0.02em;
+  }
+  .results-meta .count strong{color:var(--amber);font-family:'Orbitron',monospace;}
+
+  #list{
+    border:1px solid var(--line);
+    border-radius:10px;
+    overflow:hidden;
+    background:var(--bg-panel);
+  }
+  .row{
+    display:grid;
+    grid-template-columns:45px 1fr;
+    gap:8px;
+    padding:10px 8px;
+    background:var(--bg-panel);
+    border:1px solid var(--line);
+    border-radius:6px;
+    transition:all 0.2s;
+    align-items:center;
+  }
+  .row:hover{
+    border-color:var(--text-dim);
+    background:var(--bg-hover);
+  }
+  .row:nth-child(even){background:var(--bg-row-alt);}
+  .row:last-child{border-bottom:none;}
+  .row:hover{background:#161d26;}
+  .code{
+    background:var(--amber);
+    color:var(--bg-page);
+    font-family:'Courier New',monospace;
+    font-size:12px;
+    font-weight:700;
+    line-height:1;
+    text-align:center;
+    padding:6px 4px;
+    border-radius:4px;
+    letter-spacing:0.05em;
+  }
+  .meta{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+    min-width:0;
+    overflow:hidden;
+  }
+  .title{
+    color:var(--text-main);
+    font-family:inherit;
+    font-size:12px;
+    font-weight:600;
+    line-height:1.2;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+    overflow:hidden;
+  }
+  .artist{
+    color:var(--text-dim);
+    font-family:inherit;
+    font-size:10px;
+    line-height:1.2;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+    overflow:hidden;
+  }
+  .title{
+    font-size:15px;
+    font-weight:600;
+    color:var(--text);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .artist{
+    font-size:12.5px;
+    color:var(--text-dim);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    margin-top:2px;
+  }
+  mark{
+    background:rgba(255,176,32,0.28);
+    color:inherit;
+    border-radius:3px;
+    padding:0 1px;
+  }
+  .badge{
+    font-family:'Orbitron',monospace;
+    font-size:9.5px;
+    font-weight:700;
+    letter-spacing:0.06em;
+    padding:5px 8px;
+    border-radius:5px;
+    white-space:nowrap;
+  }
+  .badge.OPM{background:rgba(255,61,127,0.14); color:var(--opm);}
+  .badge.International{background:rgba(53,198,255,0.14); color:var(--intl);}
+  .badge.PHILIPPINES{background:rgba(87,227,137,0.14); color:var(--ph);}
+
+  .genre-badge{
+    font-family:'Orbitron',monospace;
+    font-size:9.5px;
+    font-weight:700;
+    letter-spacing:0.06em;
+    padding:5px 8px;
+    border-radius:5px;
+    white-space:nowrap;
+    background:rgba(255,176,32,0.14);
+    color:var(--amber);
+  }
+
+  .empty-state{
+    padding:60px 20px;
+    text-align:center;
+    color:var(--text-dim);
+  }
+  .empty-state .big{
+    font-family:'Orbitron',monospace;
+    color:var(--amber-dim);
+    font-size:22px;
+    margin-bottom:8px;
+  }
+
+  .load-more{
+    display:block;
+    width:100%;
+    padding:14px;
+    background:var(--bg-panel);
+    border:none;
+    border-top:1px solid var(--line);
+    color:var(--amber);
+    font-family:'Orbitron',monospace;
+    font-size:12px;
+    letter-spacing:0.08em;
+    cursor:pointer;
+  }
+  .load-more:hover{background:#161d26;}
+
+  footer{
+    text-align:center;
+    padding:20px;
+    font-size:11.5px;
+    color:#3f4854;
+    letter-spacing:0.03em;
+  }
+
+  /* ---------- FAVORITES & PLAYLISTS ---------- */
+  .actions{
+    display:none;
+    gap:8px;
+    align-items:center;
+  }
+  .fav-btn{
+    background:none;
+    border:none;
+    cursor:pointer;
+    font-size:18px;
+    color:var(--text-dim);
+    padding:6px 8px;
+    transition:all .15s;
+    display:flex;
+    align-items:center;
+  }
+  .fav-btn:hover{color:var(--text);}
+  .fav-btn.favorited{color:#ff1744;}
+  .playlist-btn{
+    background:var(--bg-row);
+    border:1px solid var(--line);
+    color:var(--text-dim);
+    font-family:'Orbitron',monospace;
+    font-size:10px;
+    font-weight:700;
+    padding:6px 10px;
+    border-radius:5px;
+    cursor:pointer;
+    transition:all .15s;
+  }
+  .playlist-btn:hover{border-color:#3a4756;color:var(--text);}
+
+  .modal-overlay{
+    display:none;
+    position:fixed;
+    top:0;left:0;right:0;bottom:0;
+    background:rgba(0,0,0,0.6);
+    z-index:999;
+    align-items:center;
+    justify-content:center;
+  }
+  .modal-overlay.active{
+    display:flex;
+  }
+  .modal{
+    background:var(--bg-panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:24px;
+    max-width:500px;
+    width:90%;
+    max-height:80vh;
+    overflow-y:auto;
+  }
+  .modal h3{
+    margin:0 0 16px;
+    font-family:'Orbitron',monospace;
+    font-size:14px;
+    font-weight:700;
+    letter-spacing:0.08em;
+    color:var(--amber);
+    text-transform:uppercase;
+  }
+  .modal-close{
+    position:absolute;
+    top:12px;
+    right:12px;
+    background:none;
+    border:none;
+    color:var(--text-dim);
+    cursor:pointer;
+    font-size:18px;
+    padding:4px 8px;
+  }
+  .modal-close:hover{color:var(--text);}
+
+  .playlist-list{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    margin-bottom:16px;
+  }
+  .playlist-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:12px;
+    background:var(--bg-row);
+    border:1px solid var(--line);
+    border-radius:8px;
+  }
+  .playlist-item.selected{
+    border-color:var(--amber);
+    background:#0d1218;
+  }
+  .playlist-item-name{
+    flex:1;
+    color:var(--text);
+    font-weight:600;
+  }
+  .playlist-item-count{
+    font-size:12px;
+    color:var(--text-dim);
+    margin:0 12px;
+  }
+  .playlist-item-btn{
+    background:none;
+    border:none;
+    cursor:pointer;
+    color:var(--text-dim);
+    font-size:14px;
+    padding:4px 8px;
+    transition:all .15s;
+  }
+  .playlist-item-btn:hover{color:var(--text);}
+
+  .modal-input{
+    width:100%;
+    background:var(--bg-row);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:12px;
+    font-size:13px;
+    color:var(--text);
+    font-family:'Space Grotesk',sans-serif;
+    margin-bottom:12px;
+    outline:none;
+  }
+  .modal-input:focus{
+    border-color:var(--amber-dim);
+    box-shadow:0 0 0 3px rgba(255,176,32,0.08);
+  }
+
+  .modal-actions{
+    display:flex;
+    gap:8px;
+  }
+  .modal-actions .btn{
+    flex:1;
+  }
+
+  .library-buttons{
+    display:flex;
+    gap:6px;
+    flex-direction:column;
+  }
+  .library-btn{
+    width:100%;
+    padding:8px 12px;
+    background:var(--bg-panel);
+    border:1px solid var(--line);
+    border-radius:6px;
+    color:var(--text-main);
+    font-family:'Orbitron',monospace;
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    cursor:pointer;
+    transition:all 0.2s;
+  }
+  .library-btn:hover{
+    background:var(--line);
+  }
+  .library-btn.active{
+    background:var(--amber);
+    color:var(--bg-page);
+    border-color:var(--amber);
+  }
+  .library-btn{
+    flex:1;
+    padding:10px 16px;
+    background:var(--bg-row);
+    border:1px solid var(--line);
+    color:var(--text-dim);
+    border-radius:8px;
+    cursor:pointer;
+    font-size:13px;
+    font-weight:600;
+    transition:all .15s;
+  }
+  .library-btn:hover{border-color:#3a4756;color:var(--text);}
+  .library-btn.active{
+    background:var(--amber);
+    color:#0a0d12;
+    border-color:var(--amber);
+  }
+
+  /* ---------- LAYOUT CONTAINER ---------- */
+  .container-main{
+    display:grid;
+    grid-template-columns:1fr 350px;
+    gap:0;
+    width:100%;
+    margin:0;
+    padding:0;
+    min-height:100vh;
+  }
+  .player-column{
+    position:relative;
+    padding:20px;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    min-height:100vh;
+    order:1;
+  }
+  .krk-frame{
+    width:100%;
+    height:100vh;
+    border:1px solid var(--line);
+    border-radius:10px;
+    background:var(--bg-panel);
+    position:sticky;
+    top:0;
+  }
+  .songbook-column{
+    min-width:0;
+    position:sticky;
+    top:0;
+    height:100vh;
+    overflow-y:auto;
+    overflow-x:hidden;
+    background:var(--bg-page);
+    border-left:1px solid var(--line);
+    z-index:10;
+    order:2;
+  }
+  .row.clickable {
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  .row.clickable:active {
+    transform: scale(0.98);
+  }
+
+  @media (max-width:1200px){
+    .container-main{
+      grid-template-columns:1fr;
+    }
+    .songbook-column{
+      position:static;
+      height:auto;
+      border-right:none;
+      border-bottom:1px solid var(--line);
+    }
+    .player-column{
+      min-height:600px;
+    }
+    .krk-frame{
+      height:600px;
+      position:relative;
+    }
+  }
+
+  @media (max-width:520px){
+    .row{grid-template-columns:44px 1fr auto; padding:11px 12px; gap:10px;}
+    .code{font-size:12px;}
+    .badge{display:none;}
+    .sort-select{margin-left:0;}
+    .upload-section{padding:16px;}
+    #jsonInput{height:100px; font-size:12px;}
+    .button-group{flex-direction:column;}
+    .btn{width:100%;}
+    .actions{gap:6px;}
+    .playlist-btn{font-size:9px;padding:5px 8px;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand-eyebrow">Videoke Song Catalog</div>
+  <div class="display-panel">
+    <h1>MEGAOKE SONGBOOK</h1>
+  </div>
+  <div class="sub"><strong id="totalCount">0</strong> songs · search by title, artist, or code</div>
+  <div class="updated-stamp" id="updateStamp"></div>
+</header>
+
+<div class="upload-section">
+  <h2>📝 Update Songbook</h2>
+  <div class="upload-row">
+    <textarea id="jsonInput" placeholder="Paste your JSON array here: [{&quot;code&quot;:1, &quot;name&quot;:&quot;Song&quot;, &quot;artistName&quot;:&quot;Artist&quot;, &quot;langName&quot;:&quot;OPM&quot;, &quot;type&quot;:&quot;MIDI&quot;}, ...]" spellcheck="false"></textarea>
+    <div class="button-group">
+      <button class="btn primary" id="addBtn">➕ Add / Merge Songs</button>
+      <button class="btn secondary" id="uploadBtn">🔁 Replace All (Upload JSON)</button>
+      <button class="btn secondary" id="clearBtn">🗑 Clear Data</button>
+    </div>
+    <div class="button-group" style="margin-top:8px;">
+      <button class="btn secondary" id="exportBtn">⬇ Export Backup (.json)</button>
+      <button class="btn secondary" id="importBtnTrigger">⬆ Import Backup File</button>
+      <input type="file" id="importFile" accept=".json,application/json" style="display:none;">
+    </div>
+    <div id="uploadStatus" class="upload-status"></div>
+  </div>
+</div>
+
+<div class="container-main">
+  <div class="player-column">
+    <div style="width:100%; height:100%; display:flex; flex-direction:column; gap:12px;">
+      <h2 style="margin:0; font-family:'Orbitron',monospace; font-size:14px; font-weight:700; letter-spacing:0.08em; color:var(--amber); text-transform:uppercase;">▶ KRK Player</h2>
+      <iframe id="krkFrame" class="krk-frame" src="https://tyfmegaoke.com/audio-tools/megaoke/krk.html" title="KRK Karaoke Player"></iframe>
+      <p style="margin:0; font-size:12px; color:var(--text-dim); text-align:center;">Click a song to play</p>
+    </div>
+  </div>
+
+  <div class="songbook-column">
+    <div class="sticky-controls" id="stickyControls">
+      <div class="controls">
+        <div class="search-wrap">
+          <input id="searchInput" type="text" placeholder="Search "Skyfall", "Adele", or code 42…" autocomplete="off" spellcheck="false">
+          <span class="search-icon">⌕ FIND</span>
+        </div>
+
+        <div class="filter-row" id="filterRow">
+          <span class="chip active" data-lang="All">All</span>
+          <span class="chip" data-lang="OPM">OPM</span>
+          <span class="chip" data-lang="International">International</span>
+          <span class="chip" data-lang="PHILIPPINES">Philippines</span>
+          <select class="sort-select" id="sortSelect">
+            <option value="relevance">Sort: Best match</option>
+            <option value="title">Sort: Title A–Z</option>
+            <option value="artist">Sort: Artist A–Z</option>
+            <option value="code">Sort: Code #</option>
+          </select>
+        </div>
+
+        <div class="alpha-row" id="alphaRow"></div>
+      </div>
+    </div>
+    <div class="results-wrap">
+      <div class="library-buttons">
+        <button class="library-btn active" data-view="all">Browse All</button>
+        <button class="library-btn" data-view="favorites">❤ Favorites</button>
+        <button class="library-btn" data-view="playlists">📋 Playlists</button>
+      </div>
+      <div class="results-meta">
+        <span id="resultsLabel">Upload JSON to see songs</span>
+        <span class="count"><strong id="shownCount">0</strong> shown</span>
+      </div>
+      <div id="list"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="playlistModal">
+  <div class="modal" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closePlaylistModal()">✕</button>
+    <h3>Add to Playlist</h3>
+    <div class="playlist-list" id="playlistList"></div>
+    <div>
+      <input class="modal-input" type="text" id="newPlaylistInput" placeholder="Or create new playlist...">
+      <div class="modal-actions">
+        <button class="btn secondary" onclick="closePlaylistModal()">Cancel</button>
+        <button class="btn primary" onclick="createNewPlaylist()">Create</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="viewPlaylistModal">
+  <div class="modal" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeViewPlaylistModal()">✕</button>
+    <h3 id="viewPlaylistTitle">Playlist</h3>
+    <div id="viewPlaylistSongs" class="playlist-list"></div>
+    <div class="modal-actions">
+      <button class="btn secondary" onclick="closeViewPlaylistModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<footer>Megaoke catalog · local songbook — updates saved to browser</footer>
+
+<script>
+(function(){
+  // Genre detection patterns
+  const genrePatterns = {
+    reggae: /reggae|bob marley|sean paul|beenie man|buju banton|shaggy|damian marley|collie buddz/i,
+    opm: /opm|juan de la cruz|apo hiking society|rivermaya|eraserheads|south border|siakol|parokya|sugar|bbs|yano|dom|sandwich/i,
+    rap: /rap|hip[- ]?hop|eminem|dr\.? dre|50 cent|snoop|tupac|biggie|jay[- ]?z|kanye|kendrick|drake|nicki|lil|young|chief keef|future|travis|pusha/i,
+    edm: /edm|electronic|dance|house|techno|trance|dubstep|trap|skrillex|deadmau5|daft punk|david guetta|calvin harris|tiësto|armin|above & beyond|swedish house mafia/i,
+    budots: /budots|mindanao|otoy|datu|uyab|intay|araw|gapas/i,
+    "cha cha": /cha[- ]?cha|mambotrap|tinikling|salsa|merengue|ballroom|latin|couples dance/i
+  };
+
+  function detectGenre(songName, artistName) {
+    const text = (songName + ' ' + (artistName || '')).toLowerCase();
+    
+    for (const [genre, pattern] of Object.entries(genrePatterns)) {
+      if (pattern.test(text)) {
+        return genre;
+      }
+    }
+    
+    if (text.includes('reggae') || text.includes('caribbean')) return 'reggae';
+    if (text.includes('rap') || text.includes('hip hop')) return 'rap';
+    if (text.includes('edm') || text.includes('electronic')) return 'edm';
+    
+    return 'other';
+  }
+
+  // Load from localStorage or use embedded data
+  let SONGS = [];
+  const STORAGE_KEY = 'megaoke_songbook_data';
+  const STORAGE_DATE = 'megaoke_songbook_date';
+
+  function loadSongs() {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const raw = JSON.parse(stored);
+        SONGS = raw.map(s => ({
+          c: s.code,
+          n: s.name,
+          a: s.artistName,
+          l: s.langName,
+          nl: s.name.toLowerCase(),
+          al: (s.artistName||'').toLowerCase(),
+          g: detectGenre(s.name, s.artistName)
+        }));
+        return true;
+      }
+    } catch (e) {
+      console.error('Error loading songs from storage:', e);
+    }
+    return false;
+  }
+
+  function updateTimestamp() {
+    const stored = localStorage.getItem(STORAGE_DATE);
+    if (stored) {
+      const date = new Date(stored);
+      const formatted = date.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
+      document.getElementById('updateStamp').textContent = `Updated at ${formatted}`;
+    } else {
+      document.getElementById('updateStamp').textContent = '';
+    }
+  }
+
+  // UI elements
+  const jsonInput = document.getElementById('jsonInput');
+  const addBtn = document.getElementById('addBtn');
+  const uploadBtn = document.getElementById('uploadBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const exportBtn = document.getElementById('exportBtn');
+  const importBtnTrigger = document.getElementById('importBtnTrigger');
+  const importFile = document.getElementById('importFile');
+  const uploadStatus = document.getElementById('uploadStatus');
+
+  // Reads whatever is currently saved in localStorage as a plain array
+  function getStoredArray() {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      const arr = stored ? JSON.parse(stored) : [];
+      return Array.isArray(arr) ? arr : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  // Saves an array to localStorage + refreshes the UI
+  function persistArray(arr, successMsg) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+    localStorage.setItem(STORAGE_DATE, new Date().toISOString());
+    loadSongs();
+    updateTimestamp();
+    showStatus(successMsg, 'success');
+    jsonInput.value = '';
+    render();
+    scrollResultsToTop();
+  }
+
+  // Merges a new array of songs into the existing stored list.
+  // Songs with a matching "code" are updated in place; new codes are appended.
+  function mergeIntoStored(newSongs) {
+    const existing = getStoredArray();
+    const byCode = new Map(existing.map(s => [String(s.code), s]));
+    let added = 0, updated = 0;
+
+    newSongs.forEach(s => {
+      const key = String(s.code);
+      if (byCode.has(key)) { updated++; } else { added++; }
+      byCode.set(key, s);
+    });
+
+    return { merged: Array.from(byCode.values()), added, updated };
+  }
+
+  addBtn.addEventListener('click', () => {
+    const text = jsonInput.value.trim();
+    if (!text) { showStatus('Please paste JSON data', 'error'); return; }
+    try {
+      const data = JSON.parse(text);
+      if (!Array.isArray(data)) { showStatus('JSON must be an array', 'error'); return; }
+      if (data.length === 0) { showStatus('Array cannot be empty', 'error'); return; }
+
+      const { merged, added, updated } = mergeIntoStored(data);
+      persistArray(merged, `✓ Added ${added} new, updated ${updated} — ${merged.length.toLocaleString()} total`);
+    } catch (e) {
+      showStatus('Invalid JSON: ' + e.message, 'error');
+    }
+  });
+
+  exportBtn.addEventListener('click', () => {
+    const data = getStoredArray();
+    if (data.length === 0) { showStatus('Nothing to export yet', 'error'); return; }
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const stamp = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `megaoke_songbook_backup_${stamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    showStatus(`✓ Exported ${data.length.toLocaleString()} songs`, 'success');
+  });
+
+  importBtnTrigger.addEventListener('click', () => importFile.click());
+
+  importFile.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      if (!Array.isArray(data)) { showStatus('Backup file must contain a JSON array', 'error'); return; }
+      if (data.length === 0) { showStatus('Backup file is empty', 'error'); return; }
+
+      // Importing a backup file replaces the full list (this IS your full backup)
+      persistArray(data, `✓ Restored ${data.length.toLocaleString()} songs from backup`);
+    } catch (err) {
+      showStatus('Invalid backup file: ' + err.message, 'error');
+    }
+    importFile.value = '';
+  });
+  const totalCount = document.getElementById('totalCount');
+  const listEl = document.getElementById('list');
+  const searchInput = document.getElementById('searchInput');
+  const resultsLabel = document.getElementById('resultsLabel');
+  const shownCount = document.getElementById('shownCount');
+  const sortSelect = document.getElementById('sortSelect');
+  const alphaRow = document.getElementById('alphaRow');
+
+  uploadBtn.addEventListener('click', () => {
+    const text = jsonInput.value.trim();
+    if (!text) {
+      showStatus('Please paste JSON data', 'error');
+      return;
+    }
+
+    try {
+      const data = JSON.parse(text);
+      if (!Array.isArray(data)) {
+        showStatus('JSON must be an array', 'error');
+        return;
+      }
+      if (data.length === 0) {
+        showStatus('Array cannot be empty', 'error');
+        return;
+      }
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      localStorage.setItem(STORAGE_DATE, new Date().toISOString());
+      
+      loadSongs();
+      updateTimestamp();
+      showStatus(`✓ Loaded ${data.length.toLocaleString()} songs`, 'success');
+      
+      jsonInput.value = '';
+      render();
+      scrollResultsToTop();
+    } catch (e) {
+      showStatus('Invalid JSON: ' + e.message, 'error');
+    }
+  });
+
+  clearBtn.addEventListener('click', () => {
+    if (confirm('Delete all saved songs?')) {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(STORAGE_DATE);
+      SONGS = [];
+      updateTimestamp();
+      jsonInput.value = '';
+      showStatus('✓ Data cleared', 'success');
+      render();
+    }
+  });
+
+  function showStatus(msg, type) {
+    uploadStatus.textContent = msg;
+    uploadStatus.className = 'upload-status ' + type;
+    setTimeout(() => {
+      uploadStatus.className = 'upload-status';
+    }, 3000);
+  }
+
+  let activeLang = 'All';
+  let activeLetter = null;
+  const PAGE_SIZE = 150;
+  let renderLimit = PAGE_SIZE;
+
+  // --- sticky bar shadow + dynamic offset ---
+  const stickyControls = document.getElementById('stickyControls');
+  const resultsWrap = document.querySelector('.results-wrap');
+  function updateStickyHeight(){
+    document.documentElement.style.setProperty('--sticky-h', stickyControls.offsetHeight + 'px');
+  }
+  updateStickyHeight();
+  window.addEventListener('resize', updateStickyHeight);
+
+  const sentinel = document.getElementById('stickySentinel');
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(([entry]) => {
+      stickyControls.classList.toggle('stuck', !entry.isIntersecting);
+    }, { threshold: 0 }).observe(sentinel);
+  }
+
+  function scrollResultsToTop(){
+    resultsWrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // Build A-Z quick browse
+  const letters = ['#','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
+  letters.forEach(L => {
+    const btn = document.createElement('div');
+    btn.className = 'alpha-btn';
+    btn.textContent = L;
+    btn.addEventListener('click', () => {
+      activeLetter = (activeLetter === L) ? null : L;
+      document.querySelectorAll('.alpha-btn').forEach(b => b.classList.remove('active'));
+      if (activeLetter) btn.classList.add('active');
+      renderLimit = PAGE_SIZE;
+      render();
+      scrollResultsToTop();
+    });
+    alphaRow.appendChild(btn);
+  });
+
+  document.getElementById('filterRow').addEventListener('click', (e) => {
+    const chip = e.target.closest('.chip');
+    if (!chip) return;
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    activeLang = chip.dataset.lang;
+    renderLimit = PAGE_SIZE;
+    render();
+    scrollResultsToTop();
+  });
+
+  sortSelect.addEventListener('change', () => { renderLimit = PAGE_SIZE; render(); scrollResultsToTop(); });
+
+  function escapeHtml(str){
+    return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+  function highlight(text, q){
+    if (!q) return escapeHtml(text);
+    const idx = text.toLowerCase().indexOf(q);
+    if (idx === -1) return escapeHtml(text);
+    return escapeHtml(text.slice(0,idx)) + '<mark>' + escapeHtml(text.slice(idx,idx+q.length)) + '</mark>' + escapeHtml(text.slice(idx+q.length));
+  }
+
+  let debounceTimer;
+  searchInput.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => { renderLimit = PAGE_SIZE; render(); scrollResultsToTop(); }, 90);
+  });
+
+  // Favorites and Playlists Storage
+  const FAVORITES_KEY = 'megaoke_favorites';
+  const PLAYLISTS_KEY = 'megaoke_playlists';
+  let favorites = new Set();
+  let playlists = {};
+  let currentView = 'all';
+  let currentPlaylistSong = null;
+
+  function loadFavoritesAndPlaylists() {
+    try {
+      const favStored = localStorage.getItem(FAVORITES_KEY);
+      favorites = favStored ? new Set(JSON.parse(favStored)) : new Set();
+      const playStored = localStorage.getItem(PLAYLISTS_KEY);
+      playlists = playStored ? JSON.parse(playStored) : {};
+    } catch (e) {
+      console.error('Error loading favorites/playlists:', e);
+      favorites = new Set();
+      playlists = {};
+    }
+  }
+
+  function saveFavoritesAndPlaylists() {
+    localStorage.setItem(FAVORITES_KEY, JSON.stringify([...favorites]));
+    localStorage.setItem(PLAYLISTS_KEY, JSON.stringify(playlists));
+  }
+
+  function toggleFavorite(songCode, btn) {
+    if (favorites.has(songCode)) {
+      favorites.delete(songCode);
+      btn.classList.remove('favorited');
+    } else {
+      favorites.add(songCode);
+      btn.classList.add('favorited');
+    }
+    saveFavoritesAndPlaylists();
+  }
+
+  function openPlaylistModal(songCode) {
+    currentPlaylistSong = songCode;
+    const playlistList = document.getElementById('playlistList');
+    playlistList.innerHTML = Object.keys(playlists).map(name => `
+      <div class="playlist-item" onclick="addToPlaylist('${name.replace(/'/g, "\\'")}')">
+        <div class="playlist-item-name">${escapeHtml(name)}</div>
+        <span class="playlist-item-count">${playlists[name].length} songs</span>
+        <button class="playlist-item-btn" onclick="event.stopPropagation(); removePlaylist('${name.replace(/'/g, "\\'")}')" title="Delete">✕</button>
+      </div>
+    `).join('');
+    document.getElementById('playlistModal').classList.add('active');
+  }
+
+  function closePlaylistModal() {
+    document.getElementById('playlistModal').classList.remove('active');
+    document.getElementById('newPlaylistInput').value = '';
+    currentPlaylistSong = null;
+  }
+
+  function createNewPlaylist() {
+    const name = document.getElementById('newPlaylistInput').value.trim();
+    if (!name) {
+      alert('Please enter a playlist name');
+      return;
+    }
+    if (playlists[name]) {
+      alert('Playlist already exists');
+      return;
+    }
+    playlists[name] = [];
+    saveFavoritesAndPlaylists();
+    addToPlaylist(name);
+  }
+
+  function addToPlaylist(playlistName) {
+    if (!currentPlaylistSong) return;
+    const song = SONGS.find(s => s.c === currentPlaylistSong);
+    if (!song) return;
+    
+    if (!playlists[playlistName].includes(currentPlaylistSong)) {
+      playlists[playlistName].push(currentPlaylistSong);
+      saveFavoritesAndPlaylists();
+      closePlaylistModal();
+      showStatus(`✓ Added to playlist "${playlistName}"`, 'success');
+    }
+  }
+
+  function removePlaylist(playlistName) {
+    if (confirm(`Delete playlist "${playlistName}"?`)) {
+      delete playlists[playlistName];
+      saveFavoritesAndPlaylists();
+      openPlaylistModal(currentPlaylistSong);
+    }
+  }
+
+  function closeViewPlaylistModal() {
+    document.getElementById('viewPlaylistModal').classList.remove('active');
+  }
+
+  function viewPlaylist(playlistName) {
+    const songs = playlists[playlistName].map(code => SONGS.find(s => s.c === code)).filter(Boolean);
+    const listEl = document.getElementById('viewPlaylistSongs');
+    
+    if (songs.length === 0) {
+      listEl.innerHTML = '<div class="empty-state">No songs in this playlist</div>';
+    } else {
+      listEl.innerHTML = songs.map(s => `
+        <div class="playlist-item">
+          <div>
+            <div class="playlist-item-name">${escapeHtml(s.n)}</div>
+            <div style="font-size:12px;color:var(--text-dim);">${escapeHtml(s.a || 'Unknown')}</div>
+          </div>
+          <button class="playlist-item-btn" onclick="removeSongFromPlaylist('${playlistName.replace(/'/g, "\\'")}', ${s.c})" title="Remove">✕</button>
+        </div>
+      `).join('');
+    }
+    
+    document.getElementById('viewPlaylistTitle').textContent = playlistName;
+    document.getElementById('viewPlaylistModal').classList.add('active');
+  }
+
+  function removeSongFromPlaylist(playlistName, songCode) {
+    playlists[playlistName] = playlists[playlistName].filter(code => code !== songCode);
+    saveFavoritesAndPlaylists();
+    viewPlaylist(playlistName);
+  }
+
+  document.querySelectorAll('.library-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.library-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentView = btn.dataset.view;
+      
+      const searchInput = document.getElementById('searchInput');
+      searchInput.value = '';
+      activeLang = 'All';
+      activeLetter = null;
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      document.querySelector('.chip[data-lang="All"]').classList.add('active');
+      document.querySelectorAll('.alpha-btn').forEach(b => b.classList.remove('active'));
+      
+      if (currentView === 'favorites') {
+        showFavoritesView();
+      } else if (currentView === 'playlists') {
+        showPlaylistsView();
+      } else {
+        SONGS = SONGS; // normal view
+        render();
+      }
+    });
+  });
+
+  function showFavoritesView() {
+    const listEl = document.getElementById('list');
+    const q = '';
+    
+    if (favorites.size === 0) {
+      listEl.innerHTML = '<div class="empty-state"><div class="big">♥ NO FAVORITES</div>Start favoriting songs to see them here.</div>';
+      document.getElementById('resultsLabel').textContent = 'No favorites yet';
+      document.getElementById('shownCount').textContent = '0';
+      return;
+    }
+
+    const favSongs = SONGS.filter(s => favorites.has(s.c));
+    document.getElementById('resultsLabel').textContent = favSongs.length + ' favorite' + (favSongs.length === 1 ? '' : 's');
+    document.getElementById('shownCount').textContent = favSongs.length;
+
+    let html = favSongs.map(s => `
+      <div class="row">
+        <div class="code">${s.c}</div>
+        <div class="meta">
+          <div class="title">${highlight(s.n, q)}</div>
+          <div class="artist">${highlight(s.a || 'Unknown artist', q)}</div>
+        </div>
+        <div class="actions">
+          <div class="badge ${s.l}">${s.l === 'PHILIPPINES' ? 'PH' : s.l.slice(0,4).toUpperCase()}</div>
+          <div class="genre-badge">${s.g.toUpperCase()}</div>
+          <button class="fav-btn favorited" onclick="toggleFavorite(${s.c}, this)" title="Favorite">♥</button>
+          <button class="playlist-btn" onclick="openPlaylistModal(${s.c})">PLAYLIST</button>
+        </div>
+      </div>
+    `).join('');
+
+    listEl.innerHTML = html;
+  }
+
+  function showPlaylistsView() {
+    const listEl = document.getElementById('list');
+    const playlistNames = Object.keys(playlists);
+
+    if (playlistNames.length === 0) {
+      listEl.innerHTML = '<div class="empty-state"><div class="big">📋 NO PLAYLISTS</div>Create a playlist by adding songs.</div>';
+      document.getElementById('resultsLabel').textContent = 'No playlists yet';
+      document.getElementById('shownCount').textContent = '0';
+      return;
+    }
+
+    document.getElementById('resultsLabel').textContent = playlistNames.length + ' playlist' + (playlistNames.length === 1 ? '' : 's');
+    document.getElementById('shownCount').textContent = playlistNames.length;
+
+    let html = playlistNames.map(name => `
+      <div class="row" onclick="viewPlaylist('${name.replace(/'/g, "\\'")}')">
+        <div class="code" style="text-align:center;font-size:16px;">📋</div>
+        <div class="meta">
+          <div class="title">${escapeHtml(name)}</div>
+          <div class="artist">${playlists[name].length} songs</div>
+        </div>
+        <div class="actions">
+          <button class="playlist-btn" style="cursor:pointer;" onclick="event.stopPropagation(); viewPlaylist('${name.replace(/'/g, "\\'")}')">VIEW</button>
+        </div>
+      </div>
+    `).join('');
+
+    listEl.innerHTML = html;
+  }
+
+  function getFiltered(){
+    const q = searchInput.value.trim().toLowerCase();
+    let arr = SONGS.slice();
+
+    if (activeLang !== 'All') arr = arr.filter(s => s.l === activeLang);
+    if (activeLetter) {
+      if (activeLetter === '#') {
+        arr = arr.filter(s => !/^[a-z]/i.test(s.n));
+      } else {
+        const l = activeLetter.toLowerCase();
+        arr = arr.filter(s => s.nl.startsWith(l));
+      }
+    }
+    if (q) {
+      const isCode = /^\d+$/.test(q);
+      if (isCode) {
+        arr = arr.filter(s => String(s.c) === q || s.nl.includes(q));
+      } else {
+        arr = arr.filter(s => s.nl.includes(q) || s.al.includes(q));
+      }
+      if (sortSelect.value === 'relevance') {
+        arr = arr.slice().sort((x,y) => {
+          const xs = x.nl.startsWith(q) ? 0 : (x.al.startsWith(q) ? 1 : 2);
+          const ys = y.nl.startsWith(q) ? 0 : (y.al.startsWith(q) ? 1 : 2);
+          if (xs !== ys) return xs - ys;
+          return x.nl.localeCompare(y.nl);
+        });
+      }
+    }
+
+    if (sortSelect.value === 'title') arr = arr.sort((x,y)=>x.nl.localeCompare(y.nl));
+    else if (sortSelect.value === 'artist') arr = arr.sort((x,y)=>x.al.localeCompare(y.al));
+    else if (sortSelect.value === 'code') arr = arr.sort((x,y)=>x.c-y.c);
+    else if (!q) arr = arr.sort((x,y)=>x.nl.localeCompare(y.nl));
+
+    return {arr, q};
+  }
+
+  function render(){
+    const {arr, q} = getFiltered();
+    const total = arr.length;
+    const showN = Math.min(renderLimit, total);
+    const slice = arr.slice(0, showN);
+
+    totalCount.textContent = SONGS.length.toLocaleString();
+    shownCount.textContent = showN.toLocaleString();
+    if (!q && !activeLetter && activeLang === 'All') {
+      resultsLabel.textContent = 'Type to search, or pick a letter to browse';
+    } else {
+      resultsLabel.textContent = total.toLocaleString() + ' match' + (total===1?'':'es');
+    }
+
+    if (total === 0 && SONGS.length === 0) {
+      listEl.innerHTML = '<div class="empty-state"><div class="big">♪ NO SIGNAL</div>No songs loaded. Upload JSON to get started.</div>';
+      return;
+    }
+
+    if (total === 0) {
+      listEl.innerHTML = '<div class="empty-state"><div class="big">♪ NO SIGNAL</div>No songs match that search.</div>';
+      return;
+    }
+
+    let html = slice.map(s => {
+      const isFav = favorites.has(s.c);
+      return `
+      <div class="row clickable" onclick="playSongCode(${s.c}); event.stopPropagation();">
+        <div class="code">${s.c}</div>
+        <div class="meta">
+          <div class="title">${highlight(s.n, q)}</div>
+          <div class="artist">${highlight(s.a || 'Unknown artist', q)}</div>
+        </div>
+        <div class="actions">
+          <div class="badge ${s.l}">${s.l === 'PHILIPPINES' ? 'PH' : s.l.slice(0,4).toUpperCase()}</div>
+          <div class="genre-badge">${s.g.toUpperCase()}</div>
+          <button class="fav-btn ${isFav ? 'favorited' : ''}" onclick="event.stopPropagation(); toggleFavorite(${s.c}, this)" title="Favorite">♥</button>
+          <button class="playlist-btn" onclick="event.stopPropagation(); openPlaylistModal(${s.c})">PLAYLIST</button>
+        </div>
+      </div>`
+    }).join('');
+
+    if (total > showN) {
+      html += `<button class="load-more" id="loadMoreBtn">SHOW ${Math.min(PAGE_SIZE, total-showN)} MORE — ${(total-showN).toLocaleString()} remaining</button>`;
+    }
+
+    listEl.innerHTML = html;
+    const btn = document.getElementById('loadMoreBtn');
+    if (btn) btn.addEventListener('click', () => { renderLimit += PAGE_SIZE; render(); });
+  }
+
+  // Play song code in KRK player
+  function playSongCode(code) {
+    const krkFrame = document.getElementById('krkFrame');
+    if (krkFrame && krkFrame.contentWindow) {
+      // Try to send message to the KRK iframe
+      try {
+        krkFrame.contentWindow.postMessage({
+          action: 'playSong',
+          code: code
+        }, '*');
+        
+        // Fallback: try to directly set input if the player exposes it
+        setTimeout(() => {
+          try {
+            const input = krkFrame.contentDocument?.querySelector('input[type="text"]');
+            if (input) {
+              input.value = String(code);
+              input.dispatchEvent(new Event('input', { bubbles: true }));
+              input.dispatchEvent(new Event('change', { bubbles: true }));
+              const enterEvent = new KeyboardEvent('keydown', {
+                key: 'Enter',
+                code: 'Enter',
+                keyCode: 13,
+                bubbles: true
+              });
+              input.dispatchEvent(enterEvent);
+            }
+          } catch (e) {
+            console.log('[v0] Could not access KRK frame input directly');
+          }
+        }, 100);
+      } catch (e) {
+        console.log('[v0] Cross-origin communication with KRK player');
+      }
+    }
+  }
+
+  // Initialize
+  loadSongs();
+  loadFavoritesAndPlaylists();
+  updateTimestamp();
+  render();
+
+  // Expose functions globally
+  window.playSongCode = playSongCode;
+  window.toggleFavorite = toggleFavorite;
+  window.openPlaylistModal = openPlaylistModal;
+  window.closePlaylistModal = closePlaylistModal;
+  window.createNewPlaylist = createNewPlaylist;
+  window.addToPlaylist = addToPlaylist;
+  window.removePlaylist = removePlaylist;
+  window.closeViewPlaylistModal = closeViewPlaylistModal;
+  window.viewPlaylist = viewPlaylist;
+  window.removeSongFromPlaylist = removeSongFromPlaylist;
+})();
+</script>
+</body>
+</html>
