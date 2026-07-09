@@ -185,16 +185,19 @@
     position:sticky;
     top:0;
     z-index:15;
-    background:var(--bg-page);
-    border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg, rgba(26,58,82,0.85) 0%, rgba(15,42,63,0.85) 100%);
+    border-bottom:2px solid #2563eb;
     transition:border-color .15s, box-shadow .15s;
+    -webkit-backdrop-filter:blur(10px);
+    backdrop-filter:blur(10px);
+    box-shadow:0 4px 12px rgba(37, 99, 235, 0.15);
   }
   .sticky-controls.stuck{
-    border-bottom-color:var(--line);
-    box-shadow:0 4px 12px -4px rgba(0,0,0,0.3);
-    background:rgba(10,13,18,0.96);
-    -webkit-backdrop-filter:blur(8px);
-    backdrop-filter:blur(8px);
+    border-bottom-color:#2563eb;
+    box-shadow:0 8px 20px rgba(37, 99, 235, 0.2);
+    background:linear-gradient(180deg, rgba(26,58,82,0.95) 0%, rgba(15,42,63,0.95) 100%);
+    -webkit-backdrop-filter:blur(12px);
+    backdrop-filter:blur(12px);
   }
   .controls{
     max-width:100%;
@@ -205,10 +208,12 @@
     position:sticky;
     top:0;
     z-index:20;
-    background:var(--bg-page);
-    padding:12px 0 8px 0;
+    background:linear-gradient(180deg, #1a3a52 0%, #0f2a3f 100%);
+    padding:16px;
     display:flex;
-    gap:8px;
+    gap:12px;
+    border-bottom:2px solid #2563eb;
+    box-shadow:0 4px 12px rgba(37, 99, 235, 0.15);
   }
   #searchInput{
     flex:1;
@@ -737,6 +742,187 @@
     }
   }
 
+  /* ---------- FULLSCREEN SPLIT-VIEW ---------- */
+  body.fullscreen-mode {
+    overflow: hidden;
+  }
+  .fullscreen-container{
+    display:none !important;
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:var(--bg);
+    z-index:9999;
+    flex-direction:row;
+    gap:0;
+  }
+  .fullscreen-container.active{
+    display:flex !important;
+    overflow:hidden;
+  }
+  .karaoke-panel{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    background:#000;
+    border-right:2px solid var(--line);
+    padding:16px;
+  }
+  .karaoke-display{
+    flex:1;
+    background:linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius:8px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    gap:20px;
+    padding:20px;
+    text-align:center;
+  }
+  .karaoke-display .code-display{
+    font-family:'Orbitron',monospace;
+    font-size:72px;
+    font-weight:900;
+    color:var(--amber);
+    text-shadow:0 0 40px rgba(255,176,32,0.6);
+  }
+  .karaoke-display .title-display{
+    font-size:32px;
+    font-weight:700;
+    color:var(--text);
+  }
+  .karaoke-display .artist-display{
+    font-size:20px;
+    color:var(--text-dim);
+  }
+  .karaoke-display .reserve-btn{
+    margin-top:20px;
+    padding:16px 32px;
+    background:var(--amber);
+    color:#0a0d12;
+    border:none;
+    border-radius:8px;
+    font-family:'Orbitron',monospace;
+    font-size:16px;
+    font-weight:700;
+    cursor:pointer;
+    transition:all .2s;
+  }
+  .karaoke-display .reserve-btn:hover{
+    transform:scale(1.05);
+    box-shadow:0 0 30px rgba(255,176,32,0.4);
+  }
+  .karaoke-display .reserve-btn.reserved{
+    background:#57e389;
+    color:#04170c;
+  }
+  .songbook-panel{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    background:var(--bg-page);
+    overflow-y:auto;
+  }
+  .fs-search-wrap{
+    padding:16px;
+    border-bottom:2px solid var(--line);
+    background:linear-gradient(180deg, #1a3a52 0%, #0f2a3f 100%);
+  }
+  .fs-search-wrap input{
+    width:100%;
+    padding:12px 16px;
+    background:var(--bg-panel);
+    border:1px solid var(--line);
+    border-radius:8px;
+    color:var(--text);
+    font-size:14px;
+    font-family:inherit;
+  }
+  .fullscreen-list{
+    flex:1;
+    overflow-y:auto;
+    padding:0;
+  }
+  .fullscreen-list .row{
+    cursor:pointer;
+    transition:all .1s;
+    border-bottom:1px solid var(--line);
+  }
+  .fullscreen-list .row:hover{
+    background:rgba(255,176,32,0.08);
+    transform:translateX(4px);
+  }
+  
+  /* ---------- CONTROLS GUIDE ---------- */
+  .controls-guide{
+    position:fixed;
+    bottom:0;
+    right:0;
+    width:320px;
+    max-height:300px;
+    background:var(--bg-panel);
+    border:1px solid var(--line);
+    border-radius:8px 8px 0 0;
+    padding:16px;
+    z-index:9998;
+    box-shadow:-4px -4px 20px rgba(0,0,0,0.3);
+    transition:transform .3s;
+    overflow-y:auto;
+  }
+  .controls-guide.hidden{
+    transform:translateY(100%);
+  }
+  .controls-guide h3{
+    margin:0 0 12px;
+    font-family:'Orbitron',monospace;
+    font-size:12px;
+    color:var(--amber);
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+  }
+  .control-item{
+    display:flex;
+    gap:12px;
+    margin-bottom:10px;
+    font-size:12px;
+    line-height:1.4;
+  }
+  .control-key{
+    min-width:50px;
+    font-family:'Orbitron',monospace;
+    color:var(--amber);
+    font-weight:700;
+  }
+  .control-desc{
+    color:var(--text-dim);
+    flex:1;
+  }
+  .controls-toggle{
+    position:fixed;
+    bottom:310px;
+    right:16px;
+    width:40px;
+    height:40px;
+    background:var(--amber);
+    border:none;
+    border-radius:50%;
+    color:#0a0d12;
+    font-size:20px;
+    cursor:pointer;
+    z-index:9998;
+    transition:all .2s;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .controls-toggle:hover{
+    transform:scale(1.1);
+    box-shadow:0 0 20px rgba(255,176,32,0.3);
+  }
+
   @media (max-width:520px){
     .row{grid-template-columns:44px 1fr auto; padding:11px 12px; gap:10px;}
     .code{font-size:12px;}
@@ -748,6 +934,11 @@
     .btn{width:100%;}
     .actions{gap:6px;}
     .playlist-btn{font-size:9px;padding:5px 8px;}
+    .fullscreen-container{flex-direction:column;}
+    .karaoke-panel{border-right:none; border-bottom:2px solid var(--line); flex:0 0 40%;}
+    .songbook-panel{flex:0 0 60%;}
+    .controls-guide{width:100%; bottom:auto; top:0; border-radius:0 0 8px 8px;}
+    .controls-toggle{bottom:auto; top:16px; right:16px;}
   }
 </style>
 </head>
@@ -888,6 +1079,14 @@
   let SONGS = [];
   const STORAGE_KEY = 'megaoke_songbook_data';
   const STORAGE_DATE = 'megaoke_songbook_date';
+  
+  // Favorites and Playlists Storage - Initialize early to prevent "before initialization" error
+  const FAVORITES_KEY = 'megaoke_favorites';
+  const PLAYLISTS_KEY = 'megaoke_playlists';
+  let favorites = new Set();
+  let playlists = {};
+  let currentView = 'all';
+  let currentPlaylistSong = null;
 
   function loadSongs() {
     try {
@@ -1096,7 +1295,7 @@
   window.addEventListener('resize', updateStickyHeight);
 
   const sentinel = document.getElementById('stickySentinel');
-  if ('IntersectionObserver' in window) {
+  if ('IntersectionObserver' in window && sentinel) {
     new IntersectionObserver(([entry]) => {
       stickyControls.classList.toggle('stuck', !entry.isIntersecting);
     }, { threshold: 0 }).observe(sentinel);
@@ -1146,19 +1345,43 @@
     return escapeHtml(text.slice(0,idx)) + '<mark>' + escapeHtml(text.slice(idx,idx+q.length)) + '</mark>' + escapeHtml(text.slice(idx+q.length));
   }
 
+  // Play song code in KRK player - defined early to avoid undefined errors
+  function playSongCode(code) {
+    console.log('[v0] Playing song code:', code);
+    
+    // Try to find the karaoke display in fullscreen or main view
+    const fsDisplay = document.getElementById('fsCode');
+    if (fsDisplay && document.getElementById('fullscreenContainer').classList.contains('active')) {
+      // Call the fullscreen select function
+      const song = window.SONGS.find(s => s.c === code);
+      if (song) {
+        window.fsSelectSong(code, song.t, song.a);
+      }
+    }
+    
+    // Try to send to KRK frame if it exists
+    const krkFrame = document.getElementById('krkFrame');
+    if (krkFrame) {
+      try {
+        // Send message to frame
+        krkFrame.contentWindow.postMessage({
+          action: 'playSong',
+          code: String(code)
+        }, '*');
+        console.log('[v0] Sent message to KRK frame');
+      } catch (e) {
+        console.log('[v0] Could not send to KRK frame (cross-origin)');
+      }
+    } else {
+      console.log('[v0] No KRK frame found, but song code is ready:', code);
+    }
+  }
+
   let debounceTimer;
   searchInput.addEventListener('input', () => {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => { renderLimit = PAGE_SIZE; render(); scrollResultsToTop(); }, 90);
   });
-
-  // Favorites and Playlists Storage
-  const FAVORITES_KEY = 'megaoke_favorites';
-  const PLAYLISTS_KEY = 'megaoke_playlists';
-  let favorites = new Set();
-  let playlists = {};
-  let currentView = 'all';
-  let currentPlaylistSong = null;
 
   function loadFavoritesAndPlaylists() {
     try {
@@ -1428,9 +1651,9 @@
     }
 
     let html = slice.map(s => {
-      const isFav = favorites.has(s.c);
+      const isFav = favorites && favorites.has && favorites.has(s.c);
       return `
-      <div class="row clickable" onclick="playSongCode(${s.c}); event.stopPropagation();">
+      <div class="row clickable" onclick="if(window.playSongCode)window.playSongCode(${s.c}); event.stopPropagation();">
         <div class="code">${s.c}</div>
         <div class="meta">
           <div class="title">${highlight(s.n, q)}</div>
@@ -1454,46 +1677,10 @@
     if (btn) btn.addEventListener('click', () => { renderLimit += PAGE_SIZE; render(); });
   }
 
-  // Play song code in KRK player
-  function playSongCode(code) {
-    const krkFrame = document.getElementById('krkFrame');
-    if (krkFrame && krkFrame.contentWindow) {
-      // Try to send message to the KRK iframe
-      try {
-        krkFrame.contentWindow.postMessage({
-          action: 'playSong',
-          code: code
-        }, '*');
-        
-        // Fallback: try to directly set input if the player exposes it
-        setTimeout(() => {
-          try {
-            const input = krkFrame.contentDocument?.querySelector('input[type="text"]');
-            if (input) {
-              input.value = String(code);
-              input.dispatchEvent(new Event('input', { bubbles: true }));
-              input.dispatchEvent(new Event('change', { bubbles: true }));
-              const enterEvent = new KeyboardEvent('keydown', {
-                key: 'Enter',
-                code: 'Enter',
-                keyCode: 13,
-                bubbles: true
-              });
-              input.dispatchEvent(enterEvent);
-            }
-          } catch (e) {
-            console.log('[v0] Could not access KRK frame input directly');
-          }
-        }, 100);
-      } catch (e) {
-        console.log('[v0] Cross-origin communication with KRK player');
-      }
-    }
-  }
 
-  // Initialize
-  loadSongs();
+  // Initialize - IMPORTANT: Load favorites first before any render() calls
   loadFavoritesAndPlaylists();
+  loadSongs();
   updateTimestamp();
   render();
 
@@ -1508,6 +1695,190 @@
   window.closeViewPlaylistModal = closeViewPlaylistModal;
   window.viewPlaylist = viewPlaylist;
   window.removeSongFromPlaylist = removeSongFromPlaylist;
+})();
+</script>
+
+<!-- Fullscreen Karaoke + Songbook Container -->
+<div class="fullscreen-container" id="fullscreenContainer">
+  <!-- Left: Karaoke Display -->
+  <div class="karaoke-panel">
+    <div class="karaoke-display" id="karaokeDisplay">
+      <div class="code-display" id="fsCode">---</div>
+      <div class="title-display" id="fsTitle">Select a Song</div>
+      <div class="artist-display" id="fsArtist">from the songbook</div>
+      <button class="reserve-btn" id="fsReserveBtn">RESERVE SONG</button>
+    </div>
+  </div>
+
+  <!-- Right: Songbook -->
+  <div class="songbook-panel">
+    <div class="fs-search-wrap">
+      <input type="text" id="fsSearchInput" placeholder="Search songs...">
+    </div>
+    <div class="fullscreen-list" id="fullscreenList"></div>
+  </div>
+
+  <!-- Exit Fullscreen Button (Top Right) -->
+  <button id="fsExitBtn" style="position:absolute; top:16px; right:16px; z-index:10000; padding:10px 16px; background:var(--amber); color:#0a0d12; border:none; border-radius:6px; font-weight:700; cursor:pointer; font-family:'Orbitron',monospace;">ESC to Exit</button>
+</div>
+
+<!-- Controls Guide -->
+<button class="controls-toggle" id="controlsToggle" title="Show/Hide Controls">?</button>
+<div class="controls-guide hidden" id="controlsGuide">
+  <h3>⌨ Keyboard Controls</h3>
+  <div class="control-item">
+    <div class="control-key">F11</div>
+    <div class="control-desc">Toggle Full Screen Mode</div>
+  </div>
+  <div class="control-item">
+    <div class="control-key">Enter</div>
+    <div class="control-desc">Reserve Selected Song</div>
+  </div>
+  <div class="control-item">
+    <div class="control-key">↑↓</div>
+    <div class="control-desc">Navigate Songs</div>
+  </div>
+  <div class="control-item">
+    <div class="control-key">*</div>
+    <div class="control-desc">Search Mode</div>
+  </div>
+  <div class="control-item">
+    <div class="control-key">Del</div>
+    <div class="control-desc">Cancel / Clear</div>
+  </div>
+  <div class="control-item">
+    <div class="control-key">F1</div>
+    <div class="control-desc">Setup Menu</div>
+  </div>
+</div>
+
+<script>
+// Fullscreen Split-View & Controls Guide Logic
+(function(){
+  const fsContainer = document.getElementById('fullscreenContainer');
+  const fsCode = document.getElementById('fsCode');
+  const fsTitle = document.getElementById('fsTitle');
+  const fsArtist = document.getElementById('fsArtist');
+  const fsReserveBtn = document.getElementById('fsReserveBtn');
+  const fsExitBtn = document.getElementById('fsExitBtn');
+  const fsSearchInput = document.getElementById('fsSearchInput');
+  const fullscreenList = document.getElementById('fullscreenList');
+  const controlsGuide = document.getElementById('controlsGuide');
+  const controlsToggle = document.getElementById('controlsToggle');
+  
+  let currentFsSong = null;
+  let currentPlayingSong = null; // Track currently playing song
+  
+  // Toggle fullscreen on F11
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'F11') {
+      e.preventDefault();
+      fsContainer.classList.toggle('active');
+      document.body.classList.toggle('fullscreen-mode');
+      if (fsContainer.classList.contains('active')) {
+        setTimeout(() => {
+          fsSearchInput.focus();
+          renderFullscreenList();
+        }, 50);
+      } else {
+        // Save data on exit
+        saveFavoritesAndPlaylists();
+      }
+    }
+    if (e.key === 'Escape' && fsContainer.classList.contains('active')) {
+      fsContainer.classList.remove('active');
+      document.body.classList.remove('fullscreen-mode');
+      saveFavoritesAndPlaylists();
+    }
+  });
+  
+  // Toggle controls guide with ? button
+  controlsToggle.addEventListener('click', () => {
+    controlsGuide.classList.toggle('hidden');
+  });
+  
+  // Render fullscreen songlist
+  function renderFullscreenList() {
+    if (typeof window.SONGS === 'undefined') return;
+    
+    const searchText = fsSearchInput.value.toLowerCase();
+    const filtered = window.SONGS.filter(s => {
+      const text = `${s.c} ${s.t} ${s.a}`.toLowerCase();
+      return text.includes(searchText);
+    });
+    
+    fullscreenList.innerHTML = filtered.slice(0, 500).map(s => `
+      <div class="row" data-code="${s.c}" onclick="window.fsSelectSong('${s.c}', '${s.t.replace(/'/g, "\\'")}', '${s.a.replace(/'/g, "\\'")}')" style="cursor:pointer; padding:12px 16px;">
+        <span class="code" style="background:var(--amber); color:#0a0d12; padding:6px 12px; border-radius:6px; font-weight:700; min-width:60px; text-align:center;">${s.c}</span>
+        <div style="flex:1; margin-left:16px;">
+          <div style="color:var(--text); font-weight:500;">${s.t}</div>
+          <div style="color:var(--text-dim); font-size:13px;">${s.a}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+  
+  // Select song in fullscreen - AUTO RESERVE if song is playing
+  window.fsSelectSong = (code, title, artist) => {
+    currentFsSong = { c: code, t: title, a: artist };
+    fsCode.textContent = code;
+    fsTitle.textContent = title;
+    fsArtist.textContent = artist;
+    
+    // Check if this code is already reserved
+    const isFav = window.favorites && window.favorites.has && window.favorites.has(code);
+    
+    // If a song is currently playing, auto-reserve the new selection
+    if (currentPlayingSong && !isFav) {
+      fsReserveBtn.textContent = '✓ AUTO RESERVED';
+      fsReserveBtn.classList.add('reserved');
+      if (window.favorites) window.favorites.add(code);
+      console.log('[v0] Auto-reserved (playing):', code, title);
+    } else if (isFav) {
+      fsReserveBtn.textContent = '✓ RESERVED';
+      fsReserveBtn.classList.add('reserved');
+    } else {
+      fsReserveBtn.textContent = 'RESERVE SONG';
+      fsReserveBtn.classList.remove('reserved');
+    }
+  };
+  
+  // Reserve song manual click
+  fsReserveBtn.addEventListener('click', () => {
+    if (currentFsSong) {
+      if (window.favorites) {
+        window.favorites.add(currentFsSong.c);
+        fsReserveBtn.textContent = '✓ RESERVED';
+        fsReserveBtn.classList.add('reserved');
+        currentPlayingSong = currentFsSong.c; // Mark as "playing"
+        console.log('[v0] Manual reserve:', currentFsSong.c, currentFsSong.t);
+      }
+    }
+  });
+  
+  // Search in fullscreen
+  fsSearchInput.addEventListener('input', renderFullscreenList);
+  
+  // Exit button
+  fsExitBtn.addEventListener('click', () => {
+    fsContainer.classList.remove('active');
+    document.body.classList.remove('fullscreen-mode');
+    saveFavoritesAndPlaylists();
+  });
+  
+  // Save favorites and playlists to localStorage
+  function saveFavoritesAndPlaylists() {
+    if (window.favorites && window.playlists) {
+      localStorage.setItem('megaoke_favorites', JSON.stringify(Array.from(window.favorites)));
+      localStorage.setItem('megaoke_playlists', JSON.stringify(window.playlists));
+      console.log('[v0] Data saved to localStorage');
+    }
+  }
+  
+  // Expose playing song setter for external use
+  window.setCurrentPlayingSong = (code) => {
+    currentPlayingSong = code;
+  };
 })();
 </script>
 </body>
